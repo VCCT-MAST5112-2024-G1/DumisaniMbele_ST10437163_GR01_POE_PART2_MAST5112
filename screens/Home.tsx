@@ -13,7 +13,9 @@ export default function HomeScreen() {
 
     const route = useRoute<HomeScreenRouteProp>();
 
+    
     const dishes = route.params?.dishes || [];
+
 
     const navigation = useNavigation<homeScreenProp>();
 
