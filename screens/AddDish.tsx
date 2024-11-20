@@ -1,69 +1,120 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, StyleSheet, Text } from 'react-native';
+import { View, TextInput, Button, StyleSheet, Text, FlatList, TouchableOpacity } from 'react-native';
 import { Picker } from '@react-native-picker/picker';
-import { useNavigation, RouteProp } from '@react-navigation/native';
-import { RootStackParamList } from './RootStackParams';
-import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { Dish, RootStackParamList } from './RootStackParams';
 
-type addDishProp = StackNavigationProp<RootStackParamList, 'AddDish'>;
+type AddDishRouteProp = RouteProp<RootStackParamList, 'AddDish'>;
 
-export default function AddDishScreen() {
+const AddDishScreen = () => {
+    const route = useRoute<AddDishRouteProp>();
+    const { dishes, setDishes } = route.params;
 
     const [Title, setTitle] = useState('');
     const [Description, setDescription] = useState('');
     const [Course, setCourse] = useState('');
-    const [Price, setPrice] = useState<number>(0);
+    const [Price, setPrice] = useState<number | string>('');  // Handle as string initially for numeric input
 
-    const navigation = useNavigation<addDishProp>();
+    const handleAddDish = () => {
+        if (!Title || !Description || !Course || !Price) {
+            alert('Please fill all the fields');
+            return;
+        }
 
+        const newDish = { Title, Description, Course, Price: Number(Price) };
+        setDishes((prevDishes) => [...prevDishes, newDish]);
 
-    const handleAddDish = (currentMenu: Array<{ Title: string; Description: string; Course: string; Price: number }>) => {
+        // Clear form fields
+        setTitle('');
+        setDescription('');
+        setCourse('');
+        setPrice('');
+        alert('Dish added successfully!');
+    };
 
-        const newDish = { Title, Description, Course, Price };
-        const updatedMenu = [...currentMenu, newDish];
+    const handleRemoveDish = (index: number) => {
+        // Remove dish at the specified index
+        setDishes((prevDishes) => prevDishes.filter((_, i) => i !== index));
+    };
 
-
-        navigation.navigate('Home', { dishes: updatedMenu });
+    const renderDishes = () => {
+        return dishes.map((dish, i) => (
+            <View key={i} style={styles.inputContainer}>
+                <Text style={styles.dishText}>
+                    {dish.Title} - {dish.Description} - {dish.Course} - R {dish.Price}
+                </Text>
+                <TouchableOpacity onPress={() => handleRemoveDish(i)} style={styles.deleteButton}>
+                    <Text style={styles.deleteButtonText}>Remove</Text>
+                </TouchableOpacity>
+            </View>
+        ));
     };
 
     return (
         <View style={styles.container}>
+            {/* Add Dish Form */}
+            <Text style={styles.title}>Add a New Dish</Text>
             <Text style={styles.label}>Dish Title:</Text>
-            <TextInput placeholder="Title" onChangeText={newText => setTitle(newText)} style={styles.input} />
+            <TextInput
+                placeholder="Title"
+                onChangeText={(newText) => setTitle(newText)}
+                style={styles.input}
+                value={Title}
+            />
 
             <Text style={styles.label}>Dish Description:</Text>
-            <TextInput placeholder="Description" onChangeText={newText => setDescription(newText)} style={styles.input} />
+            <TextInput
+                placeholder="Description"
+                onChangeText={(newText) => setDescription(newText)}
+                style={styles.input}
+                value={Description}
+            />
 
-            <Text style={styles.label}>Dish Price(R):</Text>
-            <TextInput placeholder="Price" onChangeText={newText => setPrice(parseInt(newText))} style={styles.input} />
+            <Text style={styles.label}>Dish Price (R):</Text>
+            <TextInput
+                placeholder="Price"
+                keyboardType="numeric"
+                onChangeText={(newText) => {
+                    const value = newText === '' ? '' : parseFloat(newText);
+                    setPrice(value);
+                }}
+                style={styles.input}
+                value={Price === '' ? '' : Price.toString()}  // Display as string when Price is empty
+            />
 
             <Text style={styles.label}>Course:</Text>
-            <Picker selectedValue={Course} onValueChange={(value) => setCourse(value)} style={styles.picker}>
+            <Picker
+                selectedValue={Course}
+                onValueChange={(value) => setCourse(value)}
+                style={styles.picker}
+            >
+                <Picker.Item label="Select a course" value="" />
                 <Picker.Item label="Starter" value="Starter" />
                 <Picker.Item label="Main" value="Main" />
                 <Picker.Item label="Dessert" value="Dessert" />
             </Picker>
 
-            <View style={styles.spacing}>
-            <Button 
-                title="Add Dish"
-                onPress={() => {
-                    const currentDishes = navigation.getState().routes.find(r => r.name === 'Home')?.params?.dishes || [];
-                    handleAddDish(currentDishes);
-                }}
-            />
-            </View>
+            <Button title="Add Dish" onPress={handleAddDish} />
 
+            {/* Displaying and Removing Dishes */}
+            <Text style={styles.subtitle}>Current Menu</Text>
+            {renderDishes()}
         </View>
     );
-}
+};
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16,  backgroundColor: '#ffc7b5' },
+    container: { flex: 1, padding: 16, backgroundColor: '#ffc7b5' },
+    title: { fontSize: 20, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
     input: { borderWidth: 1, padding: 8, marginBottom: 12 },
     label: { fontSize: 16, marginBottom: 8, fontWeight: 'bold' },
-    picker: { paddingTop: 0, height: 20, width: 150 },
-    spacing: { paddingTop: 80, paddingLeft: 100}
+    picker: { height: 50, width: 200, marginBottom: 16 },
+    subtitle: { fontSize: 18, fontWeight: 'bold', marginTop: 24, marginBottom: 16 },
+    dishDetails: { padding: 10, backgroundColor: '#f7d9d5', marginVertical: 8 },
+    dishText: { fontSize: 14, color: '#333' },
+    inputContainer: { marginBottom: 16, padding: 10, backgroundColor: '#f7d9d5', flexDirection: 'row', alignItems: 'center' },
+    deleteButton: { marginLeft: 10, padding: 8, backgroundColor: '#ff3333', borderRadius: 4 },
+    deleteButtonText: { color: '#fff', fontSize: 14 },
 });
 
-
+export default AddDishScreen;

@@ -1,11 +1,11 @@
 export type RootStackParamList = {
-    Home: { dishes: Dish[] };
-    AddDish: undefined;
+    Home: { dishes: Dish[]; newDish?: Dish };
+    AddDish: { dishes: Dish[]; setDishes: React.Dispatch<React.SetStateAction<Dish[]>> };
 };
 
 export type Dish = {
     Title: string;
     Description: string;
-    Course: string;
+    Course: string; 
     Price: number;
 };
